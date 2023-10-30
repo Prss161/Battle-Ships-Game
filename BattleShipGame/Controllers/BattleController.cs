@@ -11,42 +11,55 @@ namespace BattleShipGame.Controllers
     [ApiController]
     [Route("api/[controller]")]
     public class BattleController : ControllerBase
-    {   
-        private List<Ships> ships = new List<Ships>();
+    {
+        private List<Ships> PlayerOneShips = new List<Ships>();
+        private List<Ships> PlayerTwoShips = new List<Ships>();
         private int CoordinateBoardX = 10;
         private int CoordinateBoardY = 10;
         private int[,] board;
-        
+
         public BattleController()
         {
+            Ships Carrier = new Ships("Carrier", 5, 0, 0, 0, 0, false, false, false, false);
+            Ships BattleShip = new Ships("BattleShip", 4, 0, 0, 0, 0, false, false, false, false);
+            Ships Destroyer = new Ships("Destroyer", 3, 0, 0, 0, 0, false, false, false, false);
+            Ships Submarine = new Ships("Submarine", 3, 0, 0, 0, 0, false, false, false, false);
+            Ships Patrol_boat = new Ships("Patrol_boat", 2, 0, 0, 0, 0, false, false, false, false);
 
-            Ships Carrier = new Ships("Carrier", 5, 0, 0, false, false, false, false);
-            Ships BattleShip = new Ships("BattleShip", 4, 0, 0, false, false, false, false);
-            Ships Destroyer = new Ships("Destroyer", 3, 0, 0, false, false, false, false);
-            Ships Submarine = new Ships("Submarine", 3, 0, 0, false, false, false, false);
-            Ships Patrol_boat = new Ships("Patrol_boat", 2, 0, 0,  false, false, false, false);
+            PlayerOneShips.Add(Carrier);
+            PlayerOneShips.Add(BattleShip);
+            PlayerOneShips.Add(Destroyer);
+            PlayerOneShips.Add(Submarine);
+            PlayerOneShips.Add(Patrol_boat);
 
-            ships.Add(Carrier);
-            ships.Add(BattleShip);
-            ships.Add(Destroyer);
-            ships.Add(Submarine);
-            ships.Add(Patrol_boat);
+            Ships Carrier2 = new Ships("Carrier", 5, 0, 0, 0, 0, false, false, false, false);
+            Ships BattleShip2 = new Ships("BattleShip", 4, 0, 0, 0, 0, false, false, false, false);
+            Ships Destroyer2 = new Ships("Destroyer", 3, 0, 0, 0, 0, false, false, false, false);
+            Ships Submarine2 = new Ships("Submarine", 3, 0, 0, 0, 0, false, false, false, false);
+            Ships Patrol_boat2 = new Ships("Patrol_boat", 2, 0, 0, 0, 0, false, false, false, false);
+
+            PlayerTwoShips.Add(Carrier);
+            PlayerTwoShips.Add(BattleShip);
+            PlayerTwoShips.Add(Destroyer);
+            PlayerTwoShips.Add(Submarine);
+            PlayerTwoShips.Add(Patrol_boat);            
 
             board = new int[CoordinateBoardX, CoordinateBoardY];
         }
-    
-        [HttpGet("CreateBoard")]
-        public IActionResult CreateBoard()
+
+        [HttpGet("PlayerOne")]
+        public IActionResult PlayerOne()
         {
             Random random = new Random();
+            bool[,] squaresOccupied = new bool[CoordinateBoardX, CoordinateBoardY];
 
-            foreach (var ship in ships)
+            foreach (var ship in PlayerOneShips)
             {
-                PlaceShipOnBoard(ship, random);
-                CalculateDirection(ship, random);
+                PlaceShipOnBoard(ship, random, squaresOccupied);
             }
+
             var shipObjects = new List<object>();
-            foreach (var ship in ships)
+            foreach (var ship in PlayerOneShips)
             {
                 var shipObject = new
                 {
@@ -58,176 +71,160 @@ namespace BattleShipGame.Controllers
                 };
                 shipObjects.Add(shipObject);
             }
+
             return Ok(shipObjects);
         }
-        private void PlaceShipOnBoard(Ships ship, Random random)
+
+        [HttpGet("PlayerTwo")]
+        public IActionResult PlayerTwo()
+        {
+            Random random = new Random();
+            bool[,] squaresOccupied = new bool[CoordinateBoardX, CoordinateBoardY];
+
+            foreach (var ship in PlayerTwoShips)
+            {
+                PlaceShipOnBoard(ship, random, squaresOccupied);
+            }
+
+            var shipObjects = new List<object>();
+            foreach (var ship in PlayerTwoShips)
+            {
+                var shipObject = new
+                {
+                    name = ship.Name,
+                    size = ship.Size,
+                    locationX = ship.LocationX,
+                    locationY = ship.LocationY,
+                    direction = GetDirectionString(ship)
+                };
+                shipObjects.Add(shipObject);
+            }
+
+            return Ok(shipObjects);
+        }
+
+        private void PlaceShipOnBoard(Ships ship, Random random, bool[,] squaresOccupied)
         {
             while (true)
             {
-                int maxX = CoordinateBoardX;
-                int maxY = CoordinateBoardY;
-
-                int x = random.Next(0, maxX);
-                int y = random.Next(0, maxY);
+                int x = random.Next(0, CoordinateBoardX);
+                int y = random.Next(0, CoordinateBoardY);
+                int direction = random.Next(4); // 0 for North, 1 for South, 2 for East, 3 for West
 
                 bool isValidPlacement = true;
 
-                int boundX, boundY;
-                if (ship.DirectionNorth)
+                if (direction == 0 && (y + ship.Size) < CoordinateBoardY)
                 {
-                    boundX = x - ship.Size + 1;
-                    boundY = y;
-                }
-                else if (ship.DirectionSouth)
-                {
-                    boundX = x + ship.Size - 1;
-                    boundY = y;
-                }
-                else if (ship.DirectionEast)
-                {
-                    boundX = x;
-                    boundY = y + ship.Size - 1;
-                }
-                else
-                {
-                    boundX = x;
-                    boundY = y - ship.Size + 1;
-                }
-
-                if (boundX < 0 || boundX >= CoordinateBoardX || boundY < 0 || boundY >= CoordinateBoardY)
-                {
-                    isValidPlacement = false;
-                }
-                else
-                {
+                    // Check if the ship's path is clear
                     for (int i = 0; i < ship.Size; i++)
                     {
-                        int newX = x;
-                        int newY = y;
-
-                        if (ship.DirectionNorth)
-                        {
-                            newX -= i;
-                        }
-                        else if (ship.DirectionSouth)
-                        {
-                            newX += i;
-                        }
-                        else if (ship.DirectionEast)
-                        {
-                            newY += i;
-                        }
-                        else
-                        {
-                            newY -= i;
-                        }
-
-                        if (newX < 0 || newX >= CoordinateBoardX || newY < 0 || newY >= CoordinateBoardY || board[newX, newY] != 0)
+                        if (squaresOccupied[x, y + i])
                         {
                             isValidPlacement = false;
                             break;
                         }
                     }
-                }
 
-                if (isValidPlacement)
+                    if (isValidPlacement)
+                    {
+                        // Mark squares as occupied and set ship properties
+                        for (int i = 0; i < ship.Size; i++)
+                        {
+                            squaresOccupied[x, y + i] = true;
+                        }
+                        ship.LocationX = x;
+                        ship.LocationY = y;
+                        ship.CalculatedX = x;
+                        ship.CalculatedY = y + ship.Size - 1;
+                        SetDirectionProperties(ship, direction);
+                        break;
+                    }
+                }
+                else if (direction == 1 && (y - ship.Size) >= 0)
                 {
                     for (int i = 0; i < ship.Size; i++)
                     {
-                        int newX = x;
-                        int newY = y;
-
-                        if (ship.DirectionNorth)
+                        if (squaresOccupied[x, y - i])
                         {
-                            newX -= i;
+                            isValidPlacement = false;
+                            break;
                         }
-                        else if (ship.DirectionSouth)
-                        {
-                            newX += i;
-                        }
-                        else if (ship.DirectionEast)
-                        {
-                            newY += i;
-                        }
-                        else
-                        {
-                            newY -= i;
-                        }
-
-                        board[newX, newY] = 1;
                     }
-                    ship.LocationX = x;
-                    ship.LocationY = y;
-                    break;
+
+                    if (isValidPlacement)
+                    {
+                        for (int i = 0; i < ship.Size; i++)
+                        {
+                            squaresOccupied[x, y - i] = true;
+                        }
+                        ship.LocationX = x;
+                        ship.LocationY = y;
+                        ship.CalculatedX = x;
+                        ship.CalculatedY = y - ship.Size + 1;
+                        SetDirectionProperties(ship, direction);
+                        break;
+                    }
                 }
-            }
-        }
-
-        private void CalculateDirection(Ships ship, Random random)
-        {
-            int direction = random.Next(4);
-
-            while (true)
-            {
-                switch (direction)
+                else if (direction == 2 && (x + ship.Size) < CoordinateBoardX)
                 {
-                    case 0: // North
-                        if (IsValidDirection(ship, -1, 0))
+                    for (int i = 0; i < ship.Size; i++)
+                    {
+                        if (squaresOccupied[x + i, y])
                         {
-                            ship.DirectionNorth = true;
-                            return;
+                            isValidPlacement = false;
+                            break;
                         }
-                        break;
-                    case 1: // South
-                        if (IsValidDirection(ship, 1, 0))
+                    }
+
+                    if (isValidPlacement)
+                    {
+                        for (int i = 0; i < ship.Size; i++)
                         {
-                            ship.DirectionSouth = true;
-                            return;
+                            squaresOccupied[x + i, y] = true;
                         }
+                        ship.LocationX = x;
+                        ship.LocationY = y;
+                        ship.CalculatedX = x + ship.Size - 1;
+                        ship.CalculatedY = y;
+                        SetDirectionProperties(ship, direction);
                         break;
-                    case 2: // East
-                        if (IsValidDirection(ship, 0, 1))
-                        {
-                            ship.DirectionEast = true;
-                            return;
-                        }
-                        break;
-                    case 3: // West
-                        if (IsValidDirection(ship, 0, -1))
-                        {
-                            ship.DirectionWest = true;
-                            return;
-                        }
-                        break;
+                    }
                 }
-
-                // If the direction is not valid, select a new random direction.
-                direction = random.Next(4);
-            }
-        }
-
-        private bool IsValidDirection(Ships ship, int deltaX, int deltaY)
-        {
-            int newX = ship.LocationX + deltaX;
-            int newY = ship.LocationY + deltaY;
-
-            if (newX < 0 || newX >= CoordinateBoardX || newY < 0 || newY >= CoordinateBoardY)
-            {
-                return false;
-            }
-
-            for (int i = 0; i < ship.Size; i++)
-            {
-                if (newX < 0 || newX >= CoordinateBoardX || newY < 0 || newY >= CoordinateBoardY || board[newX, newY] != 0)
+                else if (direction == 3 && (x - ship.Size) >= 0)
                 {
-                    return false;
-                }
-                newX += deltaX;
-                newY += deltaY;
-            }
+                    for (int i = 0; i < ship.Size; i++)
+                    {
+                        if (squaresOccupied[x - i, y])
+                        {
+                            isValidPlacement = false;
+                            break;
+                        }
+                    }
 
-            return true;
+                    if (isValidPlacement)
+                    {
+                        for (int i = 0; i < ship.Size; i++)
+                        {
+                            squaresOccupied[x - i, y] = true;
+                        }
+                        ship.LocationX = x;
+                        ship.LocationY = y;
+                        ship.CalculatedX = x - ship.Size + 1;
+                        ship.CalculatedY = y;
+                        SetDirectionProperties(ship, direction);
+                        break;
+                    }
+                }
+            }
         }
+        private void SetDirectionProperties(Ships ship, int direction)
+        {
+            ship.DirectionNorth = direction == 0;
+            ship.DirectionSouth = direction == 1;
+            ship.DirectionEast = direction == 2;
+            ship.DirectionWest = direction == 3;
+        }
+
         private string GetDirectionString(Ships ship)
         {
             if (ship.DirectionNorth)

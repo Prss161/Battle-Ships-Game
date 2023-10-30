@@ -1,0 +1,50 @@
+.title {
+  text-align: center;
+}
+
+.game-board-container {
+  display: flex;
+  gap: 50px;
+}
+
+.game-board {
+    display: flex;
+    flex-direction: column;
+  }
+  
+.board-row {
+  display: flex;
+}
+
+.board-cell {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #000;
+}
+
+.cell {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.carrier {
+  background-color: blue; /* Define a color for the Carrier ship */
+}
+
+.battleship {
+  background-color: red; /* Define a color for the Battleship */
+}
+
+.destroyer {
+  background-color: green; /* Define a color for the Destroyer */
+}
+
+.submarine {
+  background-color: yellow; /* Define a color for the Submarine */
+}
+
+.patrol_boat {
+  background-color: orange; /* Define a color for the Patrol Boat */
+}
+  
