@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 namespace BattleShipGame.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/battle_controller")]
     public class BattleController : ControllerBase
     {
         private List<Ships> PlayerOneShips = new List<Ships>();
@@ -42,12 +42,12 @@ namespace BattleShipGame.Controllers
             PlayerTwoShips.Add(BattleShip);
             PlayerTwoShips.Add(Destroyer);
             PlayerTwoShips.Add(Submarine);
-            PlayerTwoShips.Add(Patrol_boat);            
+            PlayerTwoShips.Add(Patrol_boat);
 
             board = new int[CoordinateBoardX, CoordinateBoardY];
         }
 
-        [HttpGet("PlayerOne")]
+        [HttpGet("player_one")]
         public IActionResult PlayerOne()
         {
             Random random = new Random();
@@ -75,7 +75,7 @@ namespace BattleShipGame.Controllers
             return Ok(shipObjects);
         }
 
-        [HttpGet("PlayerTwo")]
+        [HttpGet("player_two")]
         public IActionResult PlayerTwo()
         {
             Random random = new Random();
@@ -102,7 +102,7 @@ namespace BattleShipGame.Controllers
 
             return Ok(shipObjects);
         }
-
+// Here i need post condition to check if ship is destroyed or if its game over
         private void PlaceShipOnBoard(Ships ship, Random random, bool[,] squaresOccupied)
         {
             while (true)
@@ -217,6 +217,7 @@ namespace BattleShipGame.Controllers
                 }
             }
         }
+
         private void SetDirectionProperties(Ships ship, int direction)
         {
             ship.DirectionNorth = direction == 0;

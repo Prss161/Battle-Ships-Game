@@ -1,80 +1,55 @@
 <body>
-  <h1 class="title">{{ title }}</h1>
-  <p>
-    Before play begins, each player secretly arranges their ships on their
-    primary grid here is done automatically by script. Each ship occupies a
-    number of consecutive squares on the grid, arranged either horizontally or
-    vertically. The number of squares for each ship is determined by the type of
-    ship. The ships cannot overlap (i.e., only one ship can occupy any given
-    square in the grid). The types and numbers of ships allowed are the same for
-    each player. These may vary depending on the rules. The ships should be
-    hidden from players' sight, and it's not allowed to see each other's pieces.
-    The game is a discovery game in which players need to discover their
-    opponents' ship positions.
-  </p>
-
+  <h1 class="title">BattleShip Game</h1>
+  <div class="rules">
+    <h2>Rules</h2>
+    <ol>
+      <li>Game randomly places 5 ships on the boards</li>
+      <li>Decide who starts first their turn.</li>
+      <li>Each player has one shot per turn.</li>
+      <li>First player to sink all 5 of the opponent's ships wins the game.</li>
+    </ol>
+  </div>
+  <button (click)="restartGame()">Restart Game</button>
   <div class="turn-indicator">
     <p class="turn">Turn</p>
-    <p
-      class="turn-text"
-      [ngClass]="{
-        playerOne: currentPlayer === 'playerOne',
-        playerTwo: currentPlayer === 'playerTwo'
-      }"
-    >
-      {{
-        currentPlayer === "playerOne"
-          ? "<----- Player One"
-          : "Player Two ----->"
-      }}
+    <p class="turn-text" [ngClass]="{
+      playerOne: currentPlayer === 'playerOne',
+      playerTwo: currentPlayer === 'playerTwo'
+    }">
+      {{ currentPlayer === "playerOne" ? "Player One" : "Player Two" }}
+      <br />
+      {{ currentPlayer === "playerOne" ? "----->" : "<-----" }}
     </p>
   </div>
 
   <div class="game-board-container">
     <!-- First Game Board for Player One -->
-    <div class="game-board">
-      <div
-        class="board-row"
-        *ngFor="let row of [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]; let rowIndex = index"
-      >
-        <div
-          class="board-cell"
-          *ngFor="
-            let col of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-            let colIndex = index
-          "
-        >
-          <div
-            class="cell"
-            [ngClass]="getShipsPlayerTwo(col, row)"
-            (click)="handleCellClick('playerTwo', col, row)"
-            [class.disabled]="isPlayerOneTurn"
-          ></div>
+    <div class="game-board" [ngClass]="{ 'blur-board': isPlayerOneTurn }">
+      <div class="board-row" *ngFor="let row of [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]; let rowIndex = index">
+        <div class="board-cell" *ngFor="let col of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; let colIndex = index">
+          <div class="cell" [ngClass]="getShipsPlayerTwo(col, row)" (click)="handleCellClick('playerTwo', col, row)"
+            [class.disabled]="isPlayerOneTurn"></div>
         </div>
       </div>
     </div>
-    <div class="game-board">
-      <div
-        class="board-row"
-        *ngFor="let row of [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]; let rowIndex = index"
-      >
-        <div
-          class="board-cell"
-          *ngFor="
-            let col of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-            let colIndex = index
-          "
-        >
-          <div
-            class="cell"
-            [ngClass]="getShipsPlayerOne(col, row)"
-            (click)="handleCellClick('playerOne', col, row)"
-            [class.disabled]="!isPlayerOneTurn"
-          ></div>
+    <div class="game-board" [ngClass]="{ 'blur-board': !isPlayerOneTurn }">
+      <div class="board-row" *ngFor="let row of [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]; let rowIndex = index">
+        <div class="board-cell" *ngFor="let col of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; let colIndex = index">
+          <div class="cell" [ngClass]="getShipsPlayerOne(col, row)" (click)="handleCellClick('playerOne', col, row)"
+            [class.disabled]="!isPlayerOneTurn"></div>
         </div>
       </div>
     </div>
-
-    <!-- Second Game Board for Player Two -->
+  </div>
+  <h2 class="combat-log-title">Combat Log</h2>
+  <div class="combat-log">
+    <div class="log-entry" *ngFor="let entry of logEntries" [innerHTML]="entry"></div>
+  </div>
+  <div class="game-overlay" *ngIf="gameIsOver">
+    <div class="overlay-content">
+      <h2>Game Over</h2>
+      <p>{{ currentPlayer === 'playerOne' ? 'Player Two' : 'Player One' }} wins!</p>
+      <button (click)="restartGame()">Play Again</button>
+    </div>
   </div>
 </body>

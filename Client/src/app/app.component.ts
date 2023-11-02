@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, Renderer2  } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
 @Component({
@@ -7,13 +7,13 @@ import { HttpClient } from '@angular/common/http';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
-  title = 'BattleShipsGame';
-  
-  playerOneGameBoard: string[][] = [];
-  playerTwoGameBoard: string[][] = [];
 
-  playerOneShips: any[] = [];
-  playerTwoShips: any[] = [];
+  logEntries: string[] = [];
+  gameIsOver: boolean = false;
+
+  playerOneShips: { name: string, direction: string, size: number, locationX: number, locationY: number, health: number }[] = [];
+  playerTwoShips: { name: string, direction: string, size: number, locationX: number, locationY: number, health: number }[] = [];
+
 
   playerOneHits: number[] = [];
   playerOneMisses: number[] = [];
@@ -22,29 +22,19 @@ export class AppComponent implements OnInit {
 
   isPlayerOneTurn: boolean = true;
   currentPlayer: string = 'playerOne';
-  clickedCells: Set<string> = new Set();
-  
-  constructor(private http: HttpClient) {}
+
+  constructor(private http: HttpClient, private renderer: Renderer2) { }
 
   ngOnInit() {
-    // Initialize the game boards for PlayerOne and PlayerTwo with empty cells
-    for (let i = 0; i < 10; i++) {
-      this.playerOneGameBoard[i] = [];
-      this.playerTwoGameBoard[i] = [];
-      for (let j = 0; j < 10; j++) {
-        this.playerOneGameBoard[i][j] = 'empty';
-        this.playerTwoGameBoard[i][j] = 'empty';
-      }
-    }
-
     // Make an HTTP request to fetch ship placement data for PlayerOne
-    this.http.get('http://localhost:5000/api/Battle/PlayerOne').subscribe((data: any) => {
-      this.playerOneShips = data;
+    this.http.get('http://localhost:5000/api/battle_controller/player_one').subscribe((data: any) => {
+      // Initialize ships for Player One with health
+      this.playerOneShips = data.map((ship: any) => ({ ...ship, health: ship.size }));
     });
 
-    // Make an HTTP request to fetch ship placement data for PlayerTwo
-    this.http.get('http://localhost:5000/api/Battle/PlayerTwo').subscribe((data: any) => {
-      this.playerTwoShips = data;
+    this.http.get('http://localhost:5000/api/battle_controller/player_two').subscribe((data: any) => {
+      // Initialize ships for Player Two with health
+      this.playerTwoShips = data.map((ship: any) => ({ ...ship, health: ship.size }));
     });
   }
 
@@ -55,7 +45,7 @@ export class AppComponent implements OnInit {
       return 'miss';
     } else {
       for (const ship of this.playerTwoShips) {
-        console.log(`LocationX ${ship.locationX}, LocationY ${ship.locationY}, Ship: ${ship.name}`);
+        // console.log(`LocationX ${ship.locationX}, LocationY ${ship.locationY}, Ship: ${ship.name}`);
         if (ship.direction === 'East') {
           if (
             x >= ship.locationX &&
@@ -100,7 +90,7 @@ export class AppComponent implements OnInit {
       return 'miss';
     } else {
       for (const ship of this.playerOneShips) {
-        console.log(`LocationX ${ship.locationX}, LocationY ${ship.locationY}, Ship: ${ship.name}`);
+        // console.log(`LocationX ${ship.locationX}, LocationY ${ship.locationY}, Ship: ${ship.name}`);
         if (ship.direction === 'East') {
           if (
             x >= ship.locationX &&
@@ -138,30 +128,33 @@ export class AppComponent implements OnInit {
       return 'empty';
     }
   }
+
+  
   handleCellClick(player: string, x: number, y: number) {
+    console.log(`Clicked cell at X: ${x}, Y: ${y}`);
     // Check if it's the player's turn
     if (
       (player === 'playerOne' && this.isPlayerOneTurn) ||
       (player === 'playerTwo' && !this.isPlayerOneTurn)
     ) {
       const cellIndex = x * 10 + y;
-  
+
       // Check if the cell has already been clicked
       if (
-        this.playerOneHits.includes(cellIndex) ||
-        this.playerOneMisses.includes(cellIndex) ||
-        this.playerTwoHits.includes(cellIndex) ||
-        this.playerTwoMisses.includes(cellIndex)
+        (player === 'playerOne' && this.playerOneHits.includes(cellIndex)) ||
+        (player === 'playerOne' && this.playerOneMisses.includes(cellIndex)) ||
+        (player === 'playerTwo' && this.playerTwoHits.includes(cellIndex)) ||
+        (player === 'playerTwo' && this.playerTwoMisses.includes(cellIndex))
       ) {
         return; // Cell has already been clicked
       }
-  
+
       const isHit = this.checkForHit(
         player === 'playerOne' ? this.playerTwoShips : this.playerOneShips,
         x,
         y
       );
-  
+
       if (isHit) {
         // Add the cell to hits
         if (player === 'playerOne') {
@@ -169,6 +162,10 @@ export class AppComponent implements OnInit {
         } else {
           this.playerTwoHits.push(cellIndex);
         }
+
+        // Switch the turn to the other player
+        this.isPlayerOneTurn = !this.isPlayerOneTurn;
+        this.currentPlayer = this.isPlayerOneTurn ? 'playerOne' : 'playerTwo';
       } else {
         // Add the cell to misses
         if (player === 'playerOne') {
@@ -176,14 +173,14 @@ export class AppComponent implements OnInit {
         } else {
           this.playerTwoMisses.push(cellIndex);
         }
+
+        // Switch the turn to the other player (when it's a miss)
+        this.isPlayerOneTurn = !this.isPlayerOneTurn;
+        this.currentPlayer = this.isPlayerOneTurn ? 'playerOne' : 'playerTwo';
       }
-  
-      // Toggle the turn to the other player
-      this.isPlayerOneTurn = !this.isPlayerOneTurn;
-      this.currentPlayer = this.isPlayerOneTurn ? 'playerOne' : 'playerTwo';
     }
   }
-  
+
   // Helper function to check if it's a hit or miss
   checkForHit(playerShips: any[], x: number, y: number): boolean {
     for (const ship of playerShips) {
@@ -193,6 +190,12 @@ export class AppComponent implements OnInit {
           x < ship.locationX + ship.size &&
           y === ship.locationY
         ) {
+          ship.health--;
+          if (ship.health === 0) {
+            // Handle the destruction of the ship here
+            this.appendToCombatLog(`Ship ${ship.name} has been destroyed!`);
+            this.checkForDestroyedShips(this.currentPlayer);
+          }
           return true; // It's a hit
         }
       } else if (ship.direction === 'West') {
@@ -201,6 +204,12 @@ export class AppComponent implements OnInit {
           x > ship.locationX - ship.size &&
           y === ship.locationY
         ) {
+          ship.health--;
+          if (ship.health === 0) {
+            // Handle the destruction of the ship here
+            this.appendToCombatLog(`Ship ${ship.name} has been destroyed!`);
+            this.checkForDestroyedShips(this.currentPlayer);
+          }
           return true; // It's a hit
         }
       } else if (ship.direction === 'South') {
@@ -209,6 +218,12 @@ export class AppComponent implements OnInit {
           y > ship.locationY - ship.size &&
           x === ship.locationX
         ) {
+          ship.health--;
+          if (ship.health === 0) {
+            // Handle the destruction of the ship here
+            this.appendToCombatLog(`Ship ${ship.name} has been destroyed!`);
+            this.checkForDestroyedShips(this.currentPlayer);
+          }
           return true; // It's a hit
         }
       } else if (ship.direction === 'North') {
@@ -217,13 +232,70 @@ export class AppComponent implements OnInit {
           y < ship.locationY + ship.size &&
           x === ship.locationX
         ) {
+          ship.health--;
+          if (ship.health === 0) {
+            // Handle the destruction of the ship here
+            this.appendToCombatLog(`Ship ${ship.name} has been destroyed!`);
+            this.checkForDestroyedShips(this.currentPlayer);
+          }
           return true; // It's a hit
         }
       }
     }
     return false; // It's a miss
   }
+  checkForDestroyedShips(player: string) {
+    const ships = player === 'playerOne' ? this.playerOneShips : this.playerTwoShips;
+    const playerTwo = player === 'playerOne' ? 'playerTwo' : 'playerOne';
+    const remainingShips = ships.filter((ship) => ship.health > 0);
+    const remainingShipsPlayerTwo = player === 'playerOne' ? this.playerTwoShips : this.playerOneShips;
+  
+    if (player === 'playerOne') {
+      this.appendToCombatLog(`Player One has ${remainingShips.length} ships remaining.`);
+      this.appendToCombatLog(`Player Two has ${this.playerTwoShips.filter((ship) => ship.health > 0).length} ships remaining.`);
+    } else {
+      this.appendToCombatLog(`Player One has ${remainingShips.length} ships remaining.`);
+      this.appendToCombatLog(`Player Two has ${this.playerOneShips.filter((ship) => ship.health > 0).length} ships remaining.`);
+    }
+  
+    if (remainingShips.length === 0) {
+      this.appendToCombatLog(`Player One has no remaining ships. Player Two wins!`);
+      this.gameIsOver = true; // Set the game over flag
+      // You can handle the game-ending logic here, such as displaying a message or ending the game.
+    } else if (remainingShipsPlayerTwo.filter((ship) => ship.health > 0).length === 0) {
+      this.appendToCombatLog(`Player Two has no remaining ships. Player One wins!`);
+      this.gameIsOver = true; // Set the game over flag
+      // Handle the case where the opponent wins
+    }
+  }
+  
+  checkForGameStatus() {
+
+    if (this.gameIsOver == true) {
+      this.blurGameBoard(); // Add this to blur the game board
+    }
+  }
+
+  blurGameBoard() {
+    if (this.gameIsOver) {
+      this.renderer.addClass(document.body, 'blur-background');
+
+      // Add an event listener for the "Play Again" button click
+      const playAgainButton = document.querySelector('#play-again-button');
+      if (playAgainButton) {
+        playAgainButton.addEventListener('click', () => {
+          window.location.reload(); // Reload the page to restart the game
+        });
+      }
+    }
+  }
+  appendToCombatLog(message: string) {
+    this.logEntries.push(message);
+  }
   switchTurn() {
     this.isPlayerOneTurn = !this.isPlayerOneTurn;
+  }
+  restartGame() {
+    window.location.reload();
   }
 }
