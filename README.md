@@ -7,9 +7,13 @@ The project focuses on the popular Battle Ship Game, where you and your opponent
 Project has been made using C# .Net 7.0 and Angular 16.2.
 
 ## How it works?
-On the back-end, our solution leverages the power of ASP .NET to create a robust API. This API is responsible for the dynamic and strategic placement of ships on a 10x10 grid board, thus laying the foundation for engaging gameplay.
+Back-end is implemented with ASP .NET
+It has been used for to create API which is responsible for the dynamic and strategic placement of ships on a 10x10 grid board.
 
-The front-end is implemented with Angular. It is designed to facilitate competitive local gameplay between you and your opponent. The user interface contains, game logic, managing turns, hit-and-miss tracking, and ship destruction.
+Front-end is implemented with Angular and consists of:
+- game logic, 
+- managing turns, 
+- hit-and-miss tracking, and ship destruction.
 
 ## How to run project?
 
@@ -30,3 +34,7 @@ Make sure that in `/Client/src/app/app.component.css` the colors of the ships ar
 ![BattleShipGame](Images/battleShipGame.png)
 
 ![BattleShipGameEnd](Images/BattleShipGameOver.png)
+
+## TO DO in future
+- Code refactoring,
+- Implementing the Player vs Computer
