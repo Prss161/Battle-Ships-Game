@@ -1,3 +1,4 @@
+using BattleShipGame.enums;
 using BattleShipGame.interfaces;
 using BattleShipGame.Models;
 
@@ -7,12 +8,9 @@ namespace BattleShipGame.implementations
     {
         private int CoordinateBoardX = 10;
         private int CoordinateBoardY = 10;
-        public void SetDirectionProperties(Ships ship, int direction)
+        public void SetDirectionProperties(Ships ship, ShipDirection shipDirection)
         {
-            ship.DirectionNorth = direction == 0;
-            ship.DirectionSouth = direction == 1;
-            ship.DirectionEast = direction == 2;
-            ship.DirectionWest = direction == 3;
+            ship.Direction = shipDirection;
         }
         public void PlaceShipOnBoard(Ships ship, Random random, bool[,] squaresOccupied)
         {
@@ -20,11 +18,11 @@ namespace BattleShipGame.implementations
             {
                 int x = random.Next(0, CoordinateBoardX);
                 int y = random.Next(0, CoordinateBoardY);
-                int direction = random.Next(4); // 0 for North, 1 for South, 2 for East, 3 for West
+                ShipDirection direction = (ShipDirection)random.Next(4);
 
                 bool isValidPlacement = true;
 
-                if (direction == 0 && (y + ship.Size) < CoordinateBoardY)
+                if (direction == ShipDirection.North && (y + ship.Size) < CoordinateBoardY)
                 {
                     // Check if the ship's path is clear
                     for (int i = 0; i < ship.Size; i++)
@@ -51,7 +49,7 @@ namespace BattleShipGame.implementations
                         break;
                     }
                 }
-                else if (direction == 1 && (y - ship.Size) >= 0)
+                else if (direction == ShipDirection.South && (y - ship.Size) >= 0)
                 {
                     for (int i = 0; i < ship.Size; i++)
                     {
@@ -76,7 +74,7 @@ namespace BattleShipGame.implementations
                         break;
                     }
                 }
-                else if (direction == 2 && (x + ship.Size) < CoordinateBoardX)
+                else if (direction == ShipDirection.East && (x + ship.Size) < CoordinateBoardX)
                 {
                     for (int i = 0; i < ship.Size; i++)
                     {
@@ -101,7 +99,7 @@ namespace BattleShipGame.implementations
                         break;
                     }
                 }
-                else if (direction == 3 && (x - ship.Size) >= 0)
+                else if (direction == ShipDirection.West && (x - ship.Size) >= 0)
                 {
                     for (int i = 0; i < ship.Size; i++)
                     {

@@ -1,36 +1,35 @@
 using Microsoft.AspNetCore.Mvc;
 using BattleShipGame.Models;
-using BattleShipGame.implementations;
+using BattleShipGame.interfaces;
+using BattleShipGame.enums;
 
 namespace BattleShipGame.Controllers
 {
     [ApiController]
     [Route("api/battle_controller")]
     public class BattleController : ControllerBase
-    {
-        private ShipCreator shipCreator = new ShipCreator();
-        private ShipPlacer shipPlacer;
+    {   
+        private IShipPlacer shipPlacer;
+        private IShipCreator shipCreator;
         private List<Ships> PlayerOneShips = new List<Ships>();
         private List<Ships> PlayerTwoShips = new List<Ships>();
-        private int CoordinateBoardX = 10;
-        private int CoordinateBoardY = 10;
-        private int[,] board;
-
-        public BattleController()
+        private Board board;
+        public BattleController(IShipPlacer shipPlacer, IShipCreator shipCreator)
         {
-            board = new int[CoordinateBoardX, CoordinateBoardY];
+            board = new Board(10, 10);
 
+            this.shipPlacer = shipPlacer;
+            this.shipCreator = shipCreator;
+            
             shipCreator.AddShipToList(PlayerOneShips);
             shipCreator.AddShipToList(PlayerTwoShips);
-
-            shipPlacer = new ShipPlacer();
         }
 
         [HttpGet("player_one")]
         public IActionResult PlayerOne()
         {
             Random random = new Random();
-            bool[,] squaresOccupied = new bool[CoordinateBoardX, CoordinateBoardY];
+            bool[,] squaresOccupied = new bool[board.CoordinateBoardX, board.CoordinateBoardY];
 
             foreach (var ship in PlayerOneShips)
             {
@@ -58,7 +57,7 @@ namespace BattleShipGame.Controllers
         public IActionResult PlayerTwo()
         {
             Random random = new Random();
-            bool[,] squaresOccupied = new bool[CoordinateBoardX, CoordinateBoardY];
+            bool[,] squaresOccupied = new bool[board.CoordinateBoardX, board.CoordinateBoardY];
 
             foreach (var ship in PlayerTwoShips)
             {
@@ -81,19 +80,21 @@ namespace BattleShipGame.Controllers
 
             return Ok(shipObjects);
         }
-// Here i need post condition to check if ship is destroyed or if its game over
-
         private string GetDirectionString(Ships ship)
         {
-            if (ship.DirectionNorth)
-                return "North";
-            if (ship.DirectionSouth)
-                return "South";
-            if (ship.DirectionEast)
-                return "East";
-            if (ship.DirectionWest)
-                return "West";
-            return "Unknown";
+            switch (ship.Direction)
+            {
+                case ShipDirection.North:
+                    return "North";
+                case ShipDirection.South:
+                    return "South";
+                case ShipDirection.East:
+                    return "East";
+                case ShipDirection.West:
+                    return "West";
+                default:
+                    return "Unknown";
+            }
         }
     }
 }

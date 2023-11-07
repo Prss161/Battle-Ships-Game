@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 namespace BattleShipGame.Models
 {
     public class Board
@@ -10,11 +5,6 @@ namespace BattleShipGame.Models
         public int CoordinateBoardX { get; set; }
         public int CoordinateBoardY { get; set; }
     
-        public Board()
-        {
-
-        }
-
         public Board(int _CoordinateBoardX, int _CoordinateBoardY)
         {
             CoordinateBoardX = _CoordinateBoardX;

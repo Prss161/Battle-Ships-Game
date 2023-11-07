@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using BattleShipGame.Models;
 using BattleShipGame.interfaces;
+using BattleShipGame.enums;
 
 namespace BattleShipGame.implementations
 {
@@ -11,11 +8,11 @@ namespace BattleShipGame.implementations
     {
         public void AddShipToList(List<Ships> playerShips)
         {
-            Ships Carrier = new Ships("Carrier", 5, 0, 0, 0, 0, false, false, false, false);
-            Ships BattleShip = new Ships("BattleShip", 4, 0, 0, 0, 0, false, false, false, false);
-            Ships Destroyer = new Ships("Destroyer", 3, 0, 0, 0, 0, false, false, false, false);
-            Ships Submarine = new Ships("Submarine", 3, 0, 0, 0, 0, false, false, false, false);
-            Ships Patrol_boat = new Ships("Patrol_boat", 2, 0, 0, 0, 0, false, false, false, false);
+            Ships Carrier = new Ships("Carrier", 5, 0, 0, 0, 0, ShipDirection.North);
+            Ships BattleShip = new Ships("BattleShip", 4, 0, 0, 0, 0, ShipDirection.North);
+            Ships Destroyer = new Ships("Destroyer", 3, 0, 0, 0, 0, ShipDirection.North);
+            Ships Submarine = new Ships("Submarine", 3, 0, 0, 0, 0, ShipDirection.North);
+            Ships Patrol_boat = new Ships("Patrol_boat", 2, 0, 0, 0, 0, ShipDirection.North);
 
             playerShips.Add(Carrier);
             playerShips.Add(BattleShip);

@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using BattleShipGame.enums;
 using BattleShipGame.Models;
 
 namespace BattleShipGame.interfaces
@@ -10,7 +7,7 @@ namespace BattleShipGame.interfaces
     {
         void PlaceShipOnBoard(Ships ship, Random random, bool[,] squaresOccupied);
 
-        void SetDirectionProperties(Ships ship, int direction);
+        void SetDirectionProperties(Ships ship, ShipDirection shipDirection);
     }
    
 }
