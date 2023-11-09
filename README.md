@@ -31,7 +31,7 @@ Make sure that in `/Client/src/app/app.component.css` the colors of the ships ar
 ## Photos
 ![Endpoints](Images/endpoints.png)
 
-![BattleShipGame](Images/battleShipGame.png)
+![BattleShipGame](Images/BattleShipGame.png)
 
 ![BattleShipGameEnd](Images/BattleShipGameOver.png)
 
