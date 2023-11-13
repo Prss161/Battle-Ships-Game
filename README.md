@@ -1,4 +1,4 @@
-# BattleShipGame
+# Battle Ships Game
 
 ## Introduction
 The project focuses on the popular Battle Ship Game, where you and your opponent will alternate turns, calling out one shot per turn to try and hit each other's ships. 
